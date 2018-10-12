@@ -1,15 +1,9 @@
-from math import *
+#from math import *
 import matplotlib.pyplot as plt
 import functools
 import numpy as np
 
 CASE = -1
-
-def debug(func):
-    def wrap(*args, **kwargs):
-        print(*args)
-        return func(*args, **kwargs)
-    return wrap
 
 def integrate_left(f, num_bars, start, stop):
     if start == stop or num_bars == 0:
@@ -31,8 +25,8 @@ def integrate(f, num_bars, start, stop):
     return (left + right) / 2
 
 def area(length, radius, height, angle, x):
-    a = 2 * sqrt(radius**2 - x**2)
-    b = (height/sin(angle) - (x+radius)/(tan(angle)))
+    a = 2 * np.sqrt(radius**2 - x**2)
+    b = (height/np.sin(angle) - (x+radius)/(np.tan(angle)))
     return a * b 
 
 def draw_case_line(max_volume, x, case):
@@ -41,15 +35,15 @@ def draw_case_line(max_volume, x, case):
 
 def volume(length, radius, angle, height):
     global CASE
-    max_volume = radius ** 2 * pi * length
+    max_volume = radius ** 2 * np.pi * length
     bars=1000
     area_func = functools.partial(area, length, radius, height, angle)
-    if length*sin(angle) < height < 2*radius*cos(angle):
-        x1 = height/cos(angle) - length*tan(angle) - radius
-        x2 = height/cos(angle) - radius
-        bars_1 = round(bars/(2*radius) * (x1 + radius))
-        bars_2 = round(bars/(2*radius) * (x2 - x1))
-        v1 = integrate(lambda x : 2 * sqrt(radius**2 - x**2) * length,
+    if length*np.sin(angle) < height < 2*radius*np.cos(angle):
+        x1 = height/np.cos(angle) - length*np.tan(angle) - radius
+        x2 = height/np.cos(angle) - radius
+        bars_1 = int(round(bars/(2*radius) * (x1 + radius)))
+        bars_2 = int(round(bars/(2*radius) * (x2 - x1)))
+        v1 = integrate(lambda x : 2 * np.sqrt(radius**2 - x**2) * length,
                        bars_1, -radius, x1)
         v2 = integrate(area_func, bars_2, x1, x2)
 
@@ -58,9 +52,9 @@ def volume(length, radius, angle, height):
             CASE = 0
 
         return v1 + v2
-    if 0 <= height < 2*radius * cos(angle):
-        x1 = height/cos(angle) - radius
-        bars_1 = round(bars/(2*radius) * (x1 + radius))
+    if 0 <= height < 2*radius * np.cos(angle):
+        x1 = height/np.cos(angle) - radius
+        bars_1 = int(round(bars/(2*radius) * (x1 + radius)))
         v=integrate(area_func, bars_1, -radius, x1)
 
         if CASE != 1:
@@ -68,11 +62,11 @@ def volume(length, radius, angle, height):
             CASE = 1
 
         return v
-    if length*sin(angle) < height <= length*sin(angle) + 2*radius*cos(angle):
-        x1 = height/cos(angle) - length * tan(angle) - radius
-        bars_1 = round(bars/(2*radius) * (x1 + radius))
-        bars_2 = round(bars/(2*radius) * (radius - x1))
-        v1 = integrate(lambda x : 2 * sqrt(radius**2 - x**2) * length,
+    if length*np.sin(angle) < height <= length*np.sin(angle) + 2*radius*np.cos(angle):
+        x1 = height/np.cos(angle) - length * np.tan(angle) - radius
+        bars_1 = int(round(bars/(2*radius) * (x1 + radius)))
+        bars_2 = int(round(bars/(2*radius) * (radius - x1)))
+        v1 = integrate(lambda x : 2 * np.sqrt(radius**2 - x**2) * length,
                        bars_1, -radius, x1)
         v2 = integrate(area_func, bars_2, x1, radius)
 
@@ -91,33 +85,26 @@ def volume(length, radius, angle, height):
         return v
 
 def gen_points(length, radius, angle):
-    vol = functools.partial(volume, length, radius, angle)
-    too = length*sin(angle) + 2 * radius * cos(angle)
+    vol = np.vectorize(functools.partial(volume, length, radius, angle))
+    too = length*np.sin(angle) + 2 * radius * np.cos(angle)
     num_points = 1000
-    return [(x, vol(x)) for x in np.linspace(0, too, num_points)]
+    x = np.linspace(0, too, num_points)
+    y = vol(x)
+    return x, y
 
 fig, ax = plt.subplots()
-#ax = fig.add_subplot(1,1,1)
 
 ax.spines['left'].set_position(('data', 0.0))
 ax.spines['bottom'].set_position(('data', 0.0))
 ax.spines['right'].set_color('none')
 ax.spines['top'].set_color('none')
 
-#plt.xticks([2,4,6,8,10])
-#plt.yticks([50,100,150,200])
 
-points = gen_points(8,3,pi/4)
-x1, y1 = [coord[0] for coord in points], [coord[1] for coord in points]
-
-#points2 = gen_points(8,3,pi/6)
-#x2, y2 = [coord[0] for coord in points2], [coord[1] for coord in points2]
+x1, y1 = gen_points(8,3,np.pi/4)
 
 plt.setp(ax.get_yticklabels()[1], visible=False)
 plt.setp(ax.get_xticklabels()[1], visible=False)
 
-plt.plot(x1,y1, "k") #, x2, y2, "b")
-
-
+plt.plot(x1,y1, "k")
 
 plt.show()
